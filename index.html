@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hacker Adventskalender</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="scanlines"></div>
+  <div class="noise"></div>
+  <div class="snow-container">
+    <div class="snow"></div>
+    <div class="snow snow-2"></div>
+    <div class="snow snow-3"></div>
+  </div>
+  <div class="container">
+    <header class="hero">
+      <div class="badge">root@northpole:~$</div>
+      <h1 class="glitch" data-text="Hacker Adventskalender">Hacker Adventskalender</h1>
+      <p class="tagline">24 Türen + Bonus, 31 Hacks. Lerne, löse Mini-Games, knacke den Kalender.</p>
+      <div class="hero-actions">
+        <div class="progress">
+          <span id="progress-label">Fortschritt</span>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <span id="progress-count">0 / 26</span>
+        </div>
+      </div>
+
+    </header>
+
+    <main>
+      <section class="info">
+        <div class="terminal-block">
+          <div class="terminal-header">kalender.log</div>
+          <div class="terminal-body" id="terminal-feed"></div>
+        </div>
+        <div class="rules">
+          <h2>Ops Briefing</h2>
+          <ul>
+            <li>Jede Tür erklärt ein echtes Hacking-Thema in Kurzform.</li>
+            <li>Mini-Game bestehen = Tür zählt als gelöst.</li>
+            <li>Fortschritt wird lokal gespeichert (kein Backend).</li>
+            <li>Hacker-Optik + Tastatur only? Arrow + Enter funktionieren.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="calendar" id="calendar"></section>
+    </main>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <button class="close" id="close-modal" aria-label="Schließen">×</button>
+      <div class="modal-header">
+        <div class="modal-day" id="modal-day"></div>
+        <div>
+          <h3 id="modal-title"></h3>
+          <p id="modal-topic"></p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="lesson" id="lesson"></div>
+        <div class="game" id="game"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
