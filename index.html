@@ -25,23 +25,40 @@
     <div class="snow snow-3"></div>
   </div>
   <div class="container">
-    <header class="hero">
-      <div class="badge">root@northpole:~$</div>
-      <div class="hero-title">
-        <h1 class="glitch" data-text="Hacker Adventskalender">Hacker Adventskalender</h1>
-        <p class="tagline">24 Türen + Bonus, 31 Hacks. Lerne, löse Mini-Games, knacke den Kalender.</p>
-      </div>
-      <div class="hero-actions">
-        <div class="progress">
-          <span id="progress-label">Fortschritt</span>
-          <div class="progress-bar">
-            <div class="progress-fill" id="progress-fill"></div>
-          </div>
-          <span id="progress-count">0 / 26</span>
+    <div class="intro-grid">
+      <header class="hero">
+        <div class="badge">root@northpole:~$</div>
+        <div class="hero-title">
+          <h1 class="glitch" data-text="Hacker Adventskalender">Hacker Adventskalender</h1>
+          <p class="tagline">24 Türen + Bonus, 31 Hacks. Lerne, löse Mini-Games, knacke den Kalender.</p>
         </div>
-      </div>
+        <div class="hero-actions">
+          <div class="progress">
+            <span id="progress-label">Fortschritt</span>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <span id="progress-count">0 / 26</span>
+          </div>
+        </div>
+      </header>
 
-    </header>
+      <section class="article-card">
+        <img class="article-image"
+          src="https://blog.252425.xyz/assets/img/posts/2025-12-06-der-hacker-adventskalender/hacker-adventskalender-cover.png"
+          alt="Hacker Adventskalender Cover" loading="lazy">
+        <div class="article-card-body">
+          <span class="article-chip">Blog-Feature</span>
+          <h2>Der Hacker-Adventskalender: 31 Tage Security-Wissen für dein Homelab</h2>
+          <p class="article-snippet">
+            Mehr Hintergrund zum Kalender: warum 31 Türchen, welche Security-Challenges dich erwarten und wie das Retro-Cyber
+            UI entstanden ist.
+          </p>
+          <a class="btn article-btn" href="https://blog.252425.xyz/posts/der-hacker-adventskalender-31-tage-security-wissen-fur-dein-homelab/"
+            target="_blank" rel="noreferrer noopener">Artikel lesen</a>
+        </div>
+      </section>
+    </div>
 
     <main>
       <section class="info">
@@ -62,6 +79,12 @@
 
       <section class="calendar" id="calendar"></section>
     </main>
+
+    <footer class="footer">
+      <span>252425 Homelab</span>
+      <a class="footer-link" href="https://github.com/Anes-03/Hacking-Adventskalender-2025" target="_blank"
+        rel="noreferrer noopener">GitHub Repo</a>
+    </footer>
   </div>
 
   <div class="modal" id="modal">
