@@ -845,10 +845,15 @@ const closeModalBtn = document.getElementById('close-modal');
 const progressFill = document.getElementById('progress-fill');
 const progressCount = document.getElementById('progress-count');
 const terminalFeed = document.getElementById('terminal-feed');
+const soundToggle = document.getElementById('sound-toggle');
+const soundToggleText = document.getElementById('sound-toggle-text');
 
 const storageKey = 'hacker-advent-solved';
+const soundStorageKey = 'hacker-advent-sound';
 const solved = new Set(JSON.parse(localStorage.getItem(storageKey) || '[]'));
 let currentDoorIndex = 0;
+let soundEnabled = true;
+let audioCtx = null;
 
 function saveSolved() {
   localStorage.setItem(storageKey, JSON.stringify([...solved]));
@@ -861,6 +866,46 @@ function logLine(message) {
   terminalFeed.appendChild(line);
   terminalFeed.scrollTop = terminalFeed.scrollHeight;
   if (terminalFeed.children.length > 80) terminalFeed.removeChild(terminalFeed.firstChild);
+}
+
+function updateSoundLabel() {
+  if (!soundToggleText) return;
+  soundToggleText.textContent = soundEnabled ? 'Sound an' : 'Sound aus';
+}
+
+function initSoundToggle() {
+  const stored = localStorage.getItem(soundStorageKey);
+  soundEnabled = stored === null ? true : stored === '1';
+  if (!soundToggle) return;
+  soundToggle.checked = soundEnabled;
+  updateSoundLabel();
+  soundToggle.addEventListener('change', () => {
+    soundEnabled = soundToggle.checked;
+    localStorage.setItem(soundStorageKey, soundEnabled ? '1' : '0');
+    updateSoundLabel();
+    if (soundEnabled && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  });
+}
+
+function playUnlockSound() {
+  if (!soundEnabled) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1240, now);
+    osc.frequency.exponentialRampToValueAtTime(660, now + 0.2);
+    gain.gain.setValueAtTime(0.09, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.2);
+  } catch (err) {
+    // fails silently if AudioContext is blocked or unsupported
+  }
 }
 
 function isSolved(day) {
@@ -1231,6 +1276,7 @@ function openDoor(index) {
   renderLesson(door);
   renderGame(door);
   modal.classList.add('open');
+  playUnlockSound();
   logLine(`Tor ${door.day} geöffnet.`);
 }
 
@@ -1255,6 +1301,7 @@ function boot() {
   logLine('booting adventd...');
   logLine('scan: 26 targets identified (inkl. Bonus-KI-Tore)');
   logLine('ready: öffne ein Tor');
+  initSoundToggle();
   renderCalendar();
   updateProgress();
 }
