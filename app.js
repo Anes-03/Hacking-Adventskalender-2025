@@ -855,6 +855,15 @@ let currentDoorIndex = 0;
 let soundEnabled = true;
 let audioCtx = null;
 
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
 function saveSolved() {
   localStorage.setItem(storageKey, JSON.stringify([...solved]));
 }
@@ -1015,7 +1024,8 @@ const gameRenderers = {
   quiz: (door) => {
     const list = document.createElement('div');
     list.className = 'choices';
-    door.game.choices.forEach((choice) => {
+    const shuffledChoices = shuffleArray(door.game.choices);
+    shuffledChoices.forEach((choice) => {
       const btn = document.createElement('div');
       btn.className = 'choice';
       btn.textContent = choice;
