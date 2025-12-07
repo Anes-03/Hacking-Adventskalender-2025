@@ -849,6 +849,12 @@ const progressCount = document.getElementById('progress-count');
 const terminalFeed = document.getElementById('terminal-feed');
 const soundToggle = document.getElementById('sound-toggle');
 const soundToggleText = document.getElementById('sound-toggle-text');
+const statSolved = document.getElementById('stat-solved');
+const statAttempts = document.getElementById('stat-attempts');
+const statAccuracy = document.getElementById('stat-accuracy');
+const statFlawless = document.getElementById('stat-flawless');
+const statToday = document.getElementById('stat-today');
+const statTimer = document.getElementById('stat-timer');
 const shareCalendarBtn = document.getElementById('share-calendar-btn');
 const shareDoorBtn = document.getElementById('share-door-btn');
 const copyCalendarBtn = document.getElementById('copy-calendar-btn');
@@ -866,12 +872,19 @@ const telegramDoorBtn = document.getElementById('telegram-door-btn');
 
 const storageKey = 'hacker-advent-solved';
 const soundStorageKey = 'hacker-advent-sound';
+const quizStorageKey = 'hacker-advent-quiz-stats';
+const mistakeStorageKey = 'hacker-advent-mistakes';
+const lastPlayedKey = 'hacker-advent-last-played';
 const solved = new Set(JSON.parse(localStorage.getItem(storageKey) || '[]'));
+const quizStats = JSON.parse(localStorage.getItem(quizStorageKey) || '{"attempts":0,"correct":0}');
+const mistakes = new Set(JSON.parse(localStorage.getItem(mistakeStorageKey) || '[]'));
 let currentDoorIndex = 0;
 let soundEnabled = true;
 let audioCtx = null;
 let modalView = 'lesson';
 let pendingOpenDay = null;
+let timerInterval = null;
+let timerStart = null;
 
 function shuffleArray(arr) {
   const copy = [...arr];
@@ -884,6 +897,14 @@ function shuffleArray(arr) {
 
 function saveSolved() {
   localStorage.setItem(storageKey, JSON.stringify([...solved]));
+}
+
+function saveQuizStats() {
+  localStorage.setItem(quizStorageKey, JSON.stringify(quizStats));
+}
+
+function saveMistakes() {
+  localStorage.setItem(mistakeStorageKey, JSON.stringify([...mistakes]));
 }
 
 function logLine(message) {
@@ -969,6 +990,60 @@ function telegramIntent(text, url) {
 
 function doorStatusLabel(door) {
   return isSolved(door.day) ? '✅ schon gelöst' : '🚧 noch offen';
+}
+
+function recordAttempt(door, success) {
+  if (!door || isSolved(door.day)) return;
+  quizStats.attempts += 1;
+  if (success) {
+    quizStats.correct += 1;
+  } else {
+    mistakes.add(door.day);
+    saveMistakes();
+  }
+  saveQuizStats();
+  updateStatChips();
+}
+
+function updateStatChips() {
+  const done = solved.size;
+  if (statSolved) statSolved.textContent = `${done}/${doors.length}`;
+
+  if (statAttempts) statAttempts.textContent = String(quizStats.attempts);
+
+  const { attempts, correct } = quizStats;
+  const acc = attempts ? Math.round((correct / attempts) * 100) : 0;
+  if (statAccuracy) statAccuracy.textContent = `${acc}% (${correct}/${attempts})`;
+
+  const flawless = [...solved].filter((d) => !mistakes.has(d)).length;
+  if (statFlawless) statFlawless.textContent = String(flawless);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const lastPlayed = localStorage.getItem(lastPlayedKey);
+  if (statToday) statToday.textContent = lastPlayed === today ? 'ja' : 'nein';
+
+  if (statTimer && timerStart) {
+    const diff = Math.floor((Date.now() - timerStart) / 1000);
+    const m = String(Math.floor(diff / 60)).padStart(2, '0');
+    const s = String(diff % 60).padStart(2, '0');
+    statTimer.textContent = `${m}:${s}`;
+  } else if (statTimer) {
+    statTimer.textContent = '00:00';
+  }
+}
+
+function startDoorTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerStart = Date.now();
+  updateStatChips();
+  timerInterval = setInterval(updateStatChips, 1000);
+}
+
+function stopDoorTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = null;
+  timerStart = null;
+  updateStatChips();
 }
 
 function captureDeepLinkTarget() {
@@ -1181,6 +1256,8 @@ function markSolved(day) {
   if (solved.has(day)) return;
   solved.add(day);
   saveSolved();
+  const today = new Date().toISOString().slice(0, 10);
+  localStorage.setItem(lastPlayedKey, today);
   updateProgress();
   renderCalendar();
   logLine(`Tor ${day} geknackt.`);
@@ -1190,6 +1267,7 @@ function updateProgress() {
   const done = solved.size;
   progressFill.style.width = `${(done / doors.length) * 100}%`;
   progressCount.textContent = `${done} / ${doors.length}`;
+  updateStatChips();
 }
 
 function renderCalendar() {
@@ -1296,10 +1374,12 @@ const gameRenderers = {
         const correct = choice === door.game.answer;
         btn.classList.add(correct ? 'correct' : 'wrong');
         if (correct) {
+          recordAttempt(door, true);
           markSolved(door.day);
           feedback('Richtig!');
           freezeChoices(list);
         } else {
+          recordAttempt(door, false);
           feedback('Nope – denk an Kontext.');
         }
       });
@@ -1356,9 +1436,11 @@ const gameRenderers = {
       const built = [...answerLine.children].map((c) => c.dataset.value);
       const expected = door.game.solution;
       if (expected.length === built.length && expected.every((v, i) => v === built[i])) {
+        recordAttempt(door, true);
         markSolved(door.day);
         feedback('Korrekt zusammengesteckt.');
       } else {
+        recordAttempt(door, false);
         feedback('Noch nicht ganz. Hint: ' + (door.game.hint || 'Reihenfolge prüfen.'));
       }
     });
@@ -1392,9 +1474,11 @@ const gameRenderers = {
     btn.addEventListener('click', () => {
       if (isSolved(door.day)) return;
       if (input.value.trim() === door.game.answer) {
+        recordAttempt(door, true);
         markSolved(door.day);
         feedback('Sauber dekodiert.');
       } else {
+        recordAttempt(door, false);
         feedback('Nope. Tipp: ' + (door.game.hint || 'prüfe Encoding'));
       }
     });
@@ -1435,9 +1519,11 @@ const gameRenderers = {
         return cb.checked === flagged;
       });
       if (correct) {
+        recordAttempt(door, true);
         markSolved(door.day);
         feedback(door.game.success || 'Richtig markiert.');
       } else {
+        recordAttempt(door, false);
         feedback('Nicht alle Treffer erwischt.');
       }
     });
@@ -1464,9 +1550,11 @@ const gameRenderers = {
     btn.addEventListener('click', () => {
       if (isSolved(door.day)) return;
       if (input.value.trim() === door.game.phrase) {
+        recordAttempt(door, true);
         markSolved(door.day);
         feedback('Perfekt getroffen.');
       } else {
+        recordAttempt(door, false);
         feedback('Nicht exakt. Groß/Kleinschreibung & Zeichen prüfen.');
       }
     });
@@ -1507,9 +1595,11 @@ const gameRenderers = {
       const selects = [...list.querySelectorAll('select')];
       const correct = selects.every((s) => s.value === s.dataset.answer);
       if (correct) {
+        recordAttempt(door, true);
         markSolved(door.day);
         feedback('Alles richtig zugeordnet.');
       } else {
+        recordAttempt(door, false);
         feedback('Mindestens ein Mapping ist falsch.');
       }
     });
@@ -1550,6 +1640,8 @@ function openDoor(index) {
   gameEl.dataset.rendered = '';
   setModalView('lesson');
   modal.classList.add('open');
+  const today = new Date().toISOString().slice(0, 10);
+  localStorage.setItem(lastPlayedKey, today);
   if (shareDoorBtn) {
     shareDoorBtn.disabled = false;
     shareDoorBtn.textContent = `Tor ${door.day} teilen`;
@@ -1560,12 +1652,14 @@ function openDoor(index) {
   if (redditDoorBtn) redditDoorBtn.disabled = false;
   if (whatsappDoorBtn) whatsappDoorBtn.disabled = false;
   if (telegramDoorBtn) telegramDoorBtn.disabled = false;
+  startDoorTimer();
   playUnlockSound();
   logLine(`Tor ${door.day} geöffnet.`);
 }
 
 function closeModal() {
   modal.classList.remove('open');
+  stopDoorTimer();
   if (shareDoorBtn) shareDoorBtn.disabled = true;
   if (copyDoorBtn) copyDoorBtn.disabled = true;
   if (tweetDoorBtn) tweetDoorBtn.disabled = true;

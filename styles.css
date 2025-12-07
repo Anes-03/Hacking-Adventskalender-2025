@@ -201,6 +201,35 @@ p {
   min-width: 300px;
 }
 
+.fun-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.stat-chip {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(93, 242, 122, 0.08), rgba(27, 231, 255, 0.08));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  min-width: 140px;
+}
+
+.stat-chip small {
+  color: var(--muted);
+  letter-spacing: 0.2px;
+}
+
+.stat-value {
+  font-family: 'VT323', monospace;
+  color: var(--accent);
+  font-size: 1.05rem;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
