@@ -849,6 +849,20 @@ const progressCount = document.getElementById('progress-count');
 const terminalFeed = document.getElementById('terminal-feed');
 const soundToggle = document.getElementById('sound-toggle');
 const soundToggleText = document.getElementById('sound-toggle-text');
+const shareCalendarBtn = document.getElementById('share-calendar-btn');
+const shareDoorBtn = document.getElementById('share-door-btn');
+const copyCalendarBtn = document.getElementById('copy-calendar-btn');
+const tweetCalendarBtn = document.getElementById('tweet-calendar-btn');
+const mastodonCalendarBtn = document.getElementById('mastodon-calendar-btn');
+const redditCalendarBtn = document.getElementById('reddit-calendar-btn');
+const whatsappCalendarBtn = document.getElementById('whatsapp-calendar-btn');
+const telegramCalendarBtn = document.getElementById('telegram-calendar-btn');
+const mastodonDoorBtn = document.getElementById('mastodon-door-btn');
+const copyDoorBtn = document.getElementById('copy-door-btn');
+const tweetDoorBtn = document.getElementById('tweet-door-btn');
+const redditDoorBtn = document.getElementById('reddit-door-btn');
+const whatsappDoorBtn = document.getElementById('whatsapp-door-btn');
+const telegramDoorBtn = document.getElementById('telegram-door-btn');
 
 const storageKey = 'hacker-advent-solved';
 const soundStorageKey = 'hacker-advent-sound';
@@ -857,6 +871,7 @@ let currentDoorIndex = 0;
 let soundEnabled = true;
 let audioCtx = null;
 let modalView = 'lesson';
+let pendingOpenDay = null;
 
 function shuffleArray(arr) {
   const copy = [...arr];
@@ -878,6 +893,229 @@ function logLine(message) {
   terminalFeed.appendChild(line);
   terminalFeed.scrollTop = terminalFeed.scrollHeight;
   if (terminalFeed.children.length > 80) terminalFeed.removeChild(terminalFeed.firstChild);
+}
+
+function getBaseUrl() {
+  const { origin, pathname } = window.location;
+  return `${origin}${pathname}`;
+}
+
+function getDoorUrl(day) {
+  const base = getBaseUrl().split('?')[0];
+  return `${base}?day=${String(day).padStart(2, '0')}`;
+}
+
+function fallbackCopy(text) {
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.position = 'absolute';
+  area.style.left = '-9999px';
+  document.body.appendChild(area);
+  area.select();
+  try {
+    document.execCommand('copy');
+    logLine('Share-Text in Zwischenablage gelegt.');
+  } catch (err) {
+    logLine('Konnte nicht kopieren.');
+  }
+  document.body.removeChild(area);
+}
+
+function sharePayload(payload, successLog) {
+  const shareText = [payload.title, payload.text, payload.url].filter(Boolean).join('\n');
+  if (navigator.share) {
+    navigator.share(payload).then(() => {
+      if (successLog) logLine(successLog);
+    }).catch(() => {
+      /* ignore abort */
+    });
+    return;
+  }
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(shareText).then(() => {
+      if (successLog) logLine(`${successLog} (kopiert)`);
+    }).catch(() => fallbackCopy(shareText));
+  } else {
+    fallbackCopy(shareText);
+  }
+}
+
+function tweetIntent(text, url) {
+  const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+  window.open(intent, '_blank', 'noopener,noreferrer');
+}
+
+function mastodonIntent(text, url) {
+  const intent = `https://mastodonshare.com/?text=${encodeURIComponent(`${text} ${url}`)}`;
+  window.open(intent, '_blank', 'noopener,noreferrer');
+}
+
+function redditIntent(title, url) {
+  const intent = `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+  window.open(intent, '_blank', 'noopener,noreferrer');
+}
+
+function whatsappIntent(text, url) {
+  const intent = `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`;
+  window.open(intent, '_blank', 'noopener,noreferrer');
+}
+
+function telegramIntent(text, url) {
+  const intent = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+  window.open(intent, '_blank', 'noopener,noreferrer');
+}
+
+function doorStatusLabel(door) {
+  return isSolved(door.day) ? '✅ schon gelöst' : '🚧 noch offen';
+}
+
+function captureDeepLinkTarget() {
+  const params = new URLSearchParams(window.location.search);
+  const dayParam = params.get('day');
+  if (!dayParam) return;
+  const num = Number(dayParam);
+  if (!Number.isNaN(num)) pendingOpenDay = num;
+}
+
+function openPendingDoor() {
+  if (pendingOpenDay === null) return;
+  const idx = doors.findIndex((d) => d.day === pendingOpenDay);
+  if (idx !== -1) openDoor(idx);
+  pendingOpenDay = null;
+}
+
+function initShareButtons() {
+  if (shareDoorBtn) shareDoorBtn.disabled = true;
+  if (copyDoorBtn) copyDoorBtn.disabled = true;
+  if (tweetDoorBtn) tweetDoorBtn.disabled = true;
+  if (mastodonDoorBtn) mastodonDoorBtn.disabled = true;
+  if (redditDoorBtn) redditDoorBtn.disabled = true;
+  if (whatsappDoorBtn) whatsappDoorBtn.disabled = true;
+  if (telegramDoorBtn) telegramDoorBtn.disabled = true;
+
+  shareCalendarBtn?.addEventListener('click', () => {
+    const url = getBaseUrl();
+    sharePayload({
+      title: 'Hacker Adventskalender 2025',
+      text: '31 Tage Security-Wissen + Mini-Games. Mach mit!',
+      url
+    }, 'Kalender-Link zum Teilen bereit.');
+  });
+
+  copyCalendarBtn?.addEventListener('click', () => {
+    const url = getBaseUrl();
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(url).then(() => logLine('Link kopiert.'));
+    } else {
+      fallbackCopy(url);
+    }
+  });
+
+  tweetCalendarBtn?.addEventListener('click', () => {
+    const url = getBaseUrl();
+    tweetIntent('Hacker Adventskalender 2025: 31 Tage Security + Mini-Games.', url);
+  });
+
+  mastodonCalendarBtn?.addEventListener('click', () => {
+    const url = getBaseUrl();
+    mastodonIntent('Hacker Adventskalender 2025: 31 Tage Security + Mini-Games.', url);
+  });
+
+  redditCalendarBtn?.addEventListener('click', () => {
+    const url = getBaseUrl();
+    redditIntent('Hacker Adventskalender 2025: 31 Tage Security + Mini-Games.', url);
+  });
+
+  whatsappCalendarBtn?.addEventListener('click', () => {
+    const url = getBaseUrl();
+    whatsappIntent('Hacker Adventskalender 2025: 31 Tage Security + Mini-Games.', url);
+  });
+
+  telegramCalendarBtn?.addEventListener('click', () => {
+    const url = getBaseUrl();
+    telegramIntent('Hacker Adventskalender 2025: 31 Tage Security + Mini-Games.', url);
+  });
+
+  shareDoorBtn?.addEventListener('click', () => {
+    if (!modal.classList.contains('open')) {
+      logLine('Öffne ein Tor, um es zu teilen.');
+      return;
+    }
+    const door = doors[currentDoorIndex];
+    const solvedState = doorStatusLabel(door);
+    const url = getDoorUrl(door.day);
+    sharePayload({
+      title: `Tag ${door.day}: ${door.title}`,
+      text: `Thema: ${door.topic} (${solvedState}) – Hacker Adventskalender 2025`,
+      url
+    }, `Tor ${door.day} zum Teilen bereit.`);
+  });
+
+  copyDoorBtn?.addEventListener('click', () => {
+    if (!modal.classList.contains('open')) {
+      logLine('Öffne ein Tor, um den Link zu kopieren.');
+      return;
+    }
+    const door = doors[currentDoorIndex];
+    const url = getDoorUrl(door.day);
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(url).then(() => logLine(`Link zu Tag ${door.day} kopiert.`));
+    } else {
+      fallbackCopy(url);
+    }
+  });
+
+  tweetDoorBtn?.addEventListener('click', () => {
+    if (!modal.classList.contains('open')) {
+      logLine('Öffne ein Tor, um zu teilen.');
+      return;
+    }
+    const door = doors[currentDoorIndex];
+    const url = getDoorUrl(door.day);
+    tweetIntent(`Tag ${door.day}: ${door.title} – ${door.topic}`, url);
+  });
+
+  mastodonDoorBtn?.addEventListener('click', () => {
+    if (!modal.classList.contains('open')) {
+      logLine('Öffne ein Tor, um zu teilen.');
+      return;
+    }
+    const door = doors[currentDoorIndex];
+    const url = getDoorUrl(door.day);
+    mastodonIntent(`Tag ${door.day}: ${door.title} – ${door.topic}`, url);
+  });
+
+  redditDoorBtn?.addEventListener('click', () => {
+    if (!modal.classList.contains('open')) {
+      logLine('Öffne ein Tor, um zu teilen.');
+      return;
+    }
+    const door = doors[currentDoorIndex];
+    const url = getDoorUrl(door.day);
+    redditIntent(`Tag ${door.day}: ${door.title}`, url);
+  });
+
+  whatsappDoorBtn?.addEventListener('click', () => {
+    if (!modal.classList.contains('open')) {
+      logLine('Öffne ein Tor, um zu teilen.');
+      return;
+    }
+    const door = doors[currentDoorIndex];
+    const url = getDoorUrl(door.day);
+    whatsappIntent(`Tag ${door.day}: ${door.title} – ${door.topic}`, url);
+  });
+
+  telegramDoorBtn?.addEventListener('click', () => {
+    if (!modal.classList.contains('open')) {
+      logLine('Öffne ein Tor, um zu teilen.');
+      return;
+    }
+    const door = doors[currentDoorIndex];
+    const url = getDoorUrl(door.day);
+    telegramIntent(`Tag ${door.day}: ${door.title} – ${door.topic}`, url);
+  });
 }
 
 function updateSoundLabel() {
@@ -1312,12 +1550,29 @@ function openDoor(index) {
   gameEl.dataset.rendered = '';
   setModalView('lesson');
   modal.classList.add('open');
+  if (shareDoorBtn) {
+    shareDoorBtn.disabled = false;
+    shareDoorBtn.textContent = `Tor ${door.day} teilen`;
+  }
+  if (copyDoorBtn) copyDoorBtn.disabled = false;
+  if (tweetDoorBtn) tweetDoorBtn.disabled = false;
+  if (mastodonDoorBtn) mastodonDoorBtn.disabled = false;
+  if (redditDoorBtn) redditDoorBtn.disabled = false;
+  if (whatsappDoorBtn) whatsappDoorBtn.disabled = false;
+  if (telegramDoorBtn) telegramDoorBtn.disabled = false;
   playUnlockSound();
   logLine(`Tor ${door.day} geöffnet.`);
 }
 
 function closeModal() {
   modal.classList.remove('open');
+  if (shareDoorBtn) shareDoorBtn.disabled = true;
+  if (copyDoorBtn) copyDoorBtn.disabled = true;
+  if (tweetDoorBtn) tweetDoorBtn.disabled = true;
+  if (mastodonDoorBtn) mastodonDoorBtn.disabled = true;
+  if (redditDoorBtn) redditDoorBtn.disabled = true;
+  if (whatsappDoorBtn) whatsappDoorBtn.disabled = true;
+  if (telegramDoorBtn) telegramDoorBtn.disabled = true;
 }
 
 closeModalBtn.addEventListener('click', closeModal);
@@ -1340,9 +1595,12 @@ function boot() {
   logLine('booting adventd...');
   logLine('scan: 26 targets identified (inkl. Bonus-KI-Tore)');
   logLine('ready: öffne ein Tor');
+  captureDeepLinkTarget();
   initSoundToggle();
+  initShareButtons();
   renderCalendar();
   updateProgress();
+  openPendingDoor();
 }
 
 boot();

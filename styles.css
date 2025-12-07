@@ -285,6 +285,13 @@ p {
   flex-wrap: wrap;
 }
 
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .progress {
   display: grid;
   gap: 0.35rem;
@@ -324,6 +331,70 @@ p {
 .btn:hover {
   transform: translateY(-2px);
   border-color: var(--accent);
+}
+
+.btn.ghost {
+  background: rgba(255, 255, 255, 0.02);
+  border-style: dashed;
+  color: var(--accent-2);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, rgba(93, 242, 122, 0.12), rgba(27, 231, 255, 0.1));
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.6rem 0.85rem;
+  border-radius: 12px;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.icon-btn .icon {
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn .icon-svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.icon-btn .label {
+  font-size: 0.95rem;
+}
+
+.icon-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 10px 24px rgba(93, 242, 122, 0.2);
+}
+
+.icon-btn.ghost {
+  background: rgba(255, 255, 255, 0.02);
+  border-style: dashed;
+  color: var(--accent-2);
+}
+
+.icon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .article-card {
@@ -815,6 +886,19 @@ p {
   overflow: auto;
 }
 
+.modal-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding-bottom: 0.25rem;
+  background: linear-gradient(180deg, rgba(5, 9, 20, 0.96), rgba(5, 9, 20, 0.9));
+}
+
 .modal-tabs {
   display: inline-flex;
   gap: 0.5rem;
@@ -823,9 +907,17 @@ p {
   border-radius: 12px;
   padding: 0.35rem;
   width: fit-content;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  position: static;
+}
+
+.modal-share {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.modal-share .icon-btn {
+  padding: 0.6rem 0.85rem;
 }
 
 .tab-btn {
