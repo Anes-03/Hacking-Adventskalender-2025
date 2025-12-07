@@ -841,6 +841,8 @@ const modalTitle = document.getElementById('modal-title');
 const modalTopic = document.getElementById('modal-topic');
 const lessonEl = document.getElementById('lesson');
 const gameEl = document.getElementById('game');
+const tabLesson = document.getElementById('tab-lesson');
+const tabQuiz = document.getElementById('tab-quiz');
 const closeModalBtn = document.getElementById('close-modal');
 const progressFill = document.getElementById('progress-fill');
 const progressCount = document.getElementById('progress-count');
@@ -854,6 +856,7 @@ const solved = new Set(JSON.parse(localStorage.getItem(storageKey) || '[]'));
 let currentDoorIndex = 0;
 let soundEnabled = true;
 let audioCtx = null;
+let modalView = 'lesson';
 
 function shuffleArray(arr) {
   const copy = [...arr];
@@ -1018,6 +1021,27 @@ function renderGame(door) {
   const type = door.game.type;
   const renderer = gameRenderers[type];
   if (renderer) renderer(door);
+}
+
+function setModalView(view) {
+  modalView = view;
+  const door = doors[currentDoorIndex];
+  if (view === 'lesson') {
+    lessonEl.style.display = 'grid';
+    gameEl.style.display = 'none';
+    tabLesson?.classList.add('active');
+    tabQuiz?.classList.remove('active');
+  } else {
+    // Render game only when needed for current door
+    if (gameEl.dataset.rendered !== String(door.day)) {
+      renderGame(door);
+      gameEl.dataset.rendered = String(door.day);
+    }
+    lessonEl.style.display = 'none';
+    gameEl.style.display = 'grid';
+    tabQuiz?.classList.add('active');
+    tabLesson?.classList.remove('active');
+  }
 }
 
 const gameRenderers = {
@@ -1284,7 +1308,9 @@ function openDoor(index) {
   modalTitle.textContent = door.title;
   modalTopic.textContent = door.topic;
   renderLesson(door);
-  renderGame(door);
+  gameEl.innerHTML = '';
+  gameEl.dataset.rendered = '';
+  setModalView('lesson');
   modal.classList.add('open');
   playUnlockSound();
   logLine(`Tor ${door.day} geöffnet.`);
@@ -1298,6 +1324,9 @@ closeModalBtn.addEventListener('click', closeModal);
 modal.addEventListener('click', (e) => {
   if (e.target === modal) closeModal();
 });
+
+tabLesson?.addEventListener('click', () => setModalView('lesson'));
+tabQuiz?.addEventListener('click', () => setModalView('quiz'));
 
 document.addEventListener('keydown', (e) => {
   if (!modal.classList.contains('open')) return;

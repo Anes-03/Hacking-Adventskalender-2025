@@ -694,11 +694,15 @@ p {
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: radial-gradient(circle at 20% 20%, rgba(93, 242, 122, 0.15), transparent 35%),
+    radial-gradient(circle at 80% 0%, rgba(27, 231, 255, 0.18), transparent 38%),
+    rgba(2, 4, 12, 0.78);
+  backdrop-filter: blur(8px);
   display: none;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 2rem 1rem;
+  overflow-y: auto;
   z-index: 10;
 }
 
@@ -707,39 +711,62 @@ p {
 }
 
 .modal-content {
-  background: #0a0f1e;
+  background: linear-gradient(145deg, rgba(5, 9, 20, 0.95), rgba(7, 12, 24, 0.92));
   border: 1px solid var(--border);
   border-radius: 18px;
   width: min(960px, 100%);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(93, 242, 122, 0.1);
   position: relative;
   overflow: hidden;
-  max-height: 90vh;
+  max-height: calc(100vh - 3rem);
+  margin: 0 auto;
   display: grid;
   grid-template-rows: auto 1fr;
+  animation: modalPop 0.28s ease;
 }
 
 .modal-content::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(27, 231, 255, 0.08), rgba(93, 242, 122, 0.08));
-  opacity: 0.6;
+  background: linear-gradient(135deg, rgba(27, 231, 255, 0.09), rgba(93, 242, 122, 0.12));
+  opacity: 0.5;
   pointer-events: none;
+}
+
+.modal-content::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 17px;
+  background: radial-gradient(circle at 15% 10%, rgba(93, 242, 122, 0.12), transparent 35%),
+    radial-gradient(circle at 85% 20%, rgba(27, 231, 255, 0.14), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 45%);
+  opacity: 0.8;
+  pointer-events: none;
+  filter: blur(1px);
 }
 
 .close {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
-  border-radius: 50%;
+  border-radius: 14px;
   color: var(--text);
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   font-size: 1.1rem;
   cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .modal-header {
@@ -748,39 +775,86 @@ p {
   grid-template-columns: auto 1fr;
   gap: 1rem;
   align-items: center;
-  background: rgba(255, 255, 255, 0.02);
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.03), rgba(27, 231, 255, 0.06));
   border-bottom: 1px solid var(--border);
   position: relative;
   z-index: 1;
 }
 
+.modal-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+}
+
 .modal-day {
-  background: rgba(93, 242, 122, 0.15);
+  background: radial-gradient(circle at 20% 20%, rgba(93, 242, 122, 0.3), rgba(27, 231, 255, 0.18));
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.05rem;
   font-family: 'VT323', monospace;
   color: var(--accent);
-  min-width: 70px;
+  min-width: 74px;
   text-align: center;
+  box-shadow: 0 0 0 1px rgba(93, 242, 122, 0.2), 0 12px 30px rgba(93, 242, 122, 0.18);
 }
 
 .modal-body {
   padding: 1.25rem 1.5rem 1.5rem;
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: 1fr;
   gap: 1rem;
   position: relative;
   z-index: 1;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.02));
+  max-height: 75vh;
+  overflow: auto;
+}
+
+.modal-tabs {
+  display: inline-flex;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.35rem;
+  width: fit-content;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  padding: 0.45rem 0.9rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'VT323', monospace;
+  letter-spacing: 0.4px;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: linear-gradient(135deg, rgba(93, 242, 122, 0.12), rgba(27, 231, 255, 0.1));
+  box-shadow: 0 8px 20px rgba(93, 242, 122, 0.15);
 }
 
 .lesson {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(27, 231, 255, 0.03));
+  border: 1px solid rgba(27, 231, 255, 0.25);
   border-radius: 12px;
   padding: 1rem;
   display: grid;
   gap: 0.65rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 .lesson h4 {
@@ -857,18 +931,21 @@ p {
 }
 
 .game {
-  background: #050914;
-  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(5, 9, 20, 0.9), rgba(5, 9, 20, 0.95));
+  border: 1px solid rgba(93, 242, 122, 0.35);
   border-radius: 12px;
-  padding: 1rem;
+  padding: 1.2rem;
   display: grid;
-  gap: 0.75rem;
+  gap: 0.9rem;
   min-height: 240px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45);
+  position: relative;
 }
 
 .choices {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .game h4 {
@@ -877,25 +954,33 @@ p {
 }
 
 .game .prompt {
-  color: var(--muted);
+  color: var(--text);
+  background: linear-gradient(90deg, rgba(93, 242, 122, 0.12), rgba(27, 231, 255, 0.08));
+  border: 1px solid rgba(93, 242, 122, 0.25);
+  padding: 0.85rem 0.9rem;
+  border-radius: 10px;
+  line-height: 1.5;
 }
 
 .game button,
 .game .choice {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(93, 242, 122, 0.06));
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 0.65rem 0.8rem;
-  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'VT323', monospace;
+  text-align: left;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
 }
 
 .choice:hover,
 .game button:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(93, 242, 122, 0.15);
 }
 
 .choice.correct {
@@ -974,6 +1059,18 @@ textarea {
   color: var(--accent);
 }
 
+@keyframes modalPop {
+  from {
+    transform: translateY(12px) scale(0.97);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
 @media (max-width: 960px) {
   .intro-grid {
     grid-template-columns: 1fr;
@@ -990,7 +1087,10 @@ textarea {
   .modal-body {
     grid-template-columns: 1fr;
     max-height: 70vh;
-    overflow-y: auto;
+  }
+
+  .choices {
+    grid-template-columns: 1fr;
   }
 }
 
